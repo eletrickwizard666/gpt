@@ -4,6 +4,9 @@ import { useMemo } from "react";
 import { useConversationStore } from "../../store/conversationStore";
 import { useTheme } from "../theme/ThemeProvider";
 import { relativeTime } from "../../lib/mockData";
+import { IconButton } from "../common/IconButton";
+import { useUIStore } from "../../store/uiStore";
+import { usePreferencesStore } from "../../store/preferencesStore";
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -14,13 +17,16 @@ export function Header() {
   const streamProgress = useConversationStore((state) => state.streamProgress);
   const streamHint = useConversationStore((state) => state.streamHint);
   const triggerStream = useConversationStore((state) => state.triggerStream);
+  const openPalette = useUIStore((state) => state.openPalette);
+  const openSettings = useUIStore((state) => state.openSettings);
+  const focusMode = usePreferencesStore((state) => state.focusMode);
 
   const metrics = useMemo(() => activeConversation?.metrics, [activeConversation]);
 
   return (
     <header
       style={{
-        padding: "1.25rem 2rem 0.75rem",
+        padding: `calc(var(--spacing-page) * 0.8) var(--spacing-page) calc(var(--spacing-page) * 0.55)`,
         display: "flex",
         flexDirection: "column",
         gap: "1rem",
@@ -48,27 +54,34 @@ export function Header() {
           <h1 style={{ margin: "0.2rem 0 0", fontSize: "1.45rem", fontWeight: 600 }}>
             {activeConversation?.title ?? "Conversation"}
           </h1>
+          {focusMode && (
+            <p className="text-muted" style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
+              Focus mode trims supporting chrome so you can stay in the zone.
+            </p>
+          )}
         </div>
         <div style={{ display: "flex", gap: "0.65rem", alignItems: "center" }}>
-          <button
-            className="glass-button"
+          <IconButton
+            icon={<span aria-hidden>⌘K</span>}
+            label="Quick find"
+            onClick={openPalette}
+          />
+          <IconButton
+            icon={<span aria-hidden>⚙️</span>}
+            label="Settings"
+            onClick={openSettings}
+          />
+          <IconButton
+            icon={<span aria-hidden>{theme === "dark" ? "🌞" : "🌙"}</span>}
+            label={theme === "dark" ? "Light mode" : "Dark mode"}
+            onClick={toggleTheme}
+          />
+          <IconButton
+            icon={<span aria-hidden>{streamStatus === "streaming" ? "⏳" : "🌊"}</span>}
+            label={streamStatus === "streaming" ? "Streaming" : "Stream reply"}
             onClick={() => triggerStream()}
-            disabled={streamStatus === "streaming"}
-            style={{
-              opacity: streamStatus === "streaming" ? 0.6 : 1,
-            }}
-          >
-            <span role="img" aria-label="stream">
-              🌊
-            </span>
-            Stream reply
-          </button>
-          <button className="glass-button" onClick={toggleTheme}>
-            <span role="img" aria-label="theme">
-              {theme === "dark" ? "🌞" : "🌙"}
-            </span>
-            {theme === "dark" ? "Light" : "Dark"} mode
-          </button>
+            subtle={streamStatus === "streaming"}
+          />
           <AvatarMenu />
         </div>
       </div>
@@ -122,6 +135,7 @@ function MetricPill({ label, value }: { label: string; value: string }) {
 }
 
 function AvatarMenu() {
+  const openSettings = useUIStore((state) => state.openSettings);
   return (
     <button
       className="glass-button"
@@ -131,6 +145,8 @@ function AvatarMenu() {
         gap: "0.5rem",
         padding: "0.4rem 0.65rem 0.4rem 0.4rem",
       }}
+      onClick={openSettings}
+      title="Open workspace settings"
     >
       <span
         aria-hidden

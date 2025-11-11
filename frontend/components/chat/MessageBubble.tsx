@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import type { Message } from "../../types/conversation";
 import { ToolInvocationCard } from "./ToolInvocationCard";
+import { usePreferencesStore } from "../../store/preferencesStore";
 
 const ROLE_META: Record<Message["role"], { label: string; accent: string; background: string }> = {
   system: {
@@ -24,17 +25,19 @@ const ROLE_META: Record<Message["role"], { label: string; accent: string; backgr
 
 export function MessageBubble({ message }: { message: Message }) {
   const meta = ROLE_META[message.role];
+  const denseMode = usePreferencesStore((state) => state.denseMode);
+  const showTimestamps = usePreferencesStore((state) => state.showTimestamps);
 
   return (
     <article
       className={clsx("fade-card")}
       style={{
-        padding: "1.4rem",
+        padding: denseMode ? "1rem 1.1rem" : "1.4rem",
         borderRadius: "var(--radius-lg)",
         border: "1px solid rgba(255,255,255,0.08)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.75rem",
+        gap: denseMode ? "0.6rem" : "0.75rem",
         background: "rgba(10,12,18,0.55)",
       }}
     >
@@ -55,7 +58,15 @@ export function MessageBubble({ message }: { message: Message }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
           <span style={{ fontWeight: 600 }}>{meta.label}</span>
           <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-            {message.streaming ? "Streaming…" : new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {message.streaming
+              ? "Streaming…"
+              : showTimestamps
+                ? new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : message.role === "assistant"
+                  ? "Assistant reply"
+                  : message.role === "user"
+                    ? "Prompt" 
+                    : "System prompt"}
           </span>
         </div>
       </header>
@@ -67,24 +78,25 @@ export function MessageBubble({ message }: { message: Message }) {
       ))}
       {message.role === "assistant" && (
         <footer style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-          <ActionPill icon="📋" label="Copy" />
-          <ActionPill icon="🔄" label="Regenerate" />
-          <ActionPill icon="🪄" label="Branch" />
-          <ActionPill icon="👍" label="Good" subtle />
-          <ActionPill icon="👎" label="Needs work" subtle />
+          <ActionPill icon="📋" label="Copy" compact={denseMode} />
+          <ActionPill icon="🔄" label="Regenerate" compact={denseMode} />
+          <ActionPill icon="🪄" label="Branch" compact={denseMode} />
+          <ActionPill icon="🧠" label="Explain reasoning" compact={denseMode} />
+          <ActionPill icon="👍" label="Good" subtle compact={denseMode} />
+          <ActionPill icon="👎" label="Needs work" subtle compact={denseMode} />
         </footer>
       )}
     </article>
   );
 }
 
-function ActionPill({ icon, label, subtle }: { icon: string; label: string; subtle?: boolean }) {
+function ActionPill({ icon, label, subtle, compact }: { icon: string; label: string; subtle?: boolean; compact?: boolean }) {
   return (
     <button
       className="glass-button"
       style={{
         background: subtle ? "rgba(255,255,255,0.04)" : "linear-gradient(140deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06))",
-        padding: "0.45rem 0.8rem",
+        padding: compact ? "0.35rem 0.7rem" : "0.45rem 0.8rem",
         borderRadius: "999px",
         fontSize: "0.8rem",
         display: "inline-flex",

@@ -12,6 +12,9 @@ const STATUS_META: Record<ToolInvocation["status"], { label: string; color: stri
 
 export function ToolInvocationCard({ invocation }: { invocation: ToolInvocation }) {
   const meta = STATUS_META[invocation.status];
+  const startedAt = invocation.startedAt ? new Date(invocation.startedAt) : undefined;
+  const finishedAt = invocation.finishedAt ? new Date(invocation.finishedAt) : undefined;
+  const durationMs = startedAt && finishedAt ? finishedAt.getTime() - startedAt.getTime() : undefined;
 
   return (
     <section
@@ -30,7 +33,9 @@ export function ToolInvocationCard({ invocation }: { invocation: ToolInvocation 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <span style={{ fontWeight: 600 }}>{invocation.name}</span>
           <span className="text-muted" style={{ fontSize: "0.78rem" }}>
-            {invocation.startedAt ? `Started ${new Date(invocation.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Pending"}
+            {startedAt
+              ? `Started ${startedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+              : "Pending"}
           </span>
         </div>
         <span style={{ color: meta.color, fontWeight: 600 }}>{meta.label}</span>
@@ -52,9 +57,21 @@ export function ToolInvocationCard({ invocation }: { invocation: ToolInvocation 
         </pre>
       ) : (
         <div className="text-muted" style={{ fontSize: "0.85rem" }}>
-          Awaiting tool response. We'll surface telemetry and structured outputs in-line when available.
+          Awaiting tool response. We’ll surface telemetry and structured outputs in-line when available.
         </div>
       )}
+      <footer style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginTop: "0.25rem" }}>
+        <span className="text-muted">
+          {invocation.status === "complete" && finishedAt
+            ? `Finished ${finishedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+            : invocation.status === "streaming"
+              ? "Streaming live"
+              : "Telemetry pending"}
+        </span>
+        {typeof durationMs === "number" && (
+          <span style={{ color: "var(--accent)" }}>{Math.max(1, Math.round(durationMs / 1000))}s</span>
+        )}
+      </footer>
     </section>
   );
 }

@@ -5,6 +5,8 @@ import { useConversationStore } from "../../store/conversationStore";
 import { relativeTime } from "../../lib/mockData";
 import type { Conversation } from "../../types/conversation";
 import { clsx } from "clsx";
+import { usePreferencesStore } from "../../store/preferencesStore";
+import { useUIStore } from "../../store/uiStore";
 
 export function Sidebar() {
   const conversations = useConversationStore((state) => state.conversations);
@@ -13,6 +15,11 @@ export function Sidebar() {
   const createConversation = useConversationStore((state) => state.createConversation);
   const renameConversation = useConversationStore((state) => state.renameConversation);
   const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const focusMode = usePreferencesStore((state) => state.focusMode);
+  const setFocusMode = usePreferencesStore((state) => state.setFocusMode);
+  const denseMode = usePreferencesStore((state) => state.denseMode);
+  const openPalette = useUIStore((state) => state.openPalette);
+  const streamStatus = useConversationStore((state) => state.streamStatus);
 
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,6 +43,16 @@ export function Sidebar() {
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <button className="glass-button" onClick={() => createConversation()}>
             <span style={{ fontWeight: 600 }}>+ New conversation</span>
+          </button>
+          <button
+            className="glass-button"
+            onClick={openPalette}
+            style={{ justifyContent: "space-between", fontSize: "0.85rem" }}
+          >
+            <span>Quick switcher</span>
+            <span className="text-muted" aria-hidden>
+              ⌘K
+            </span>
           </button>
           <div
             style={{
@@ -78,6 +95,16 @@ export function Sidebar() {
             gap: "0.35rem",
           }}
         >
+          <div className="fade-card" style={{ padding: "1rem", borderRadius: "var(--radius-md)" }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>Workspace snapshot</p>
+            <p className="text-muted" style={{ margin: "0.3rem 0 0", fontSize: "0.78rem" }}>
+              {conversations.length} conversations • {streamStatus === "streaming" ? "Streaming" : "Idle"}
+            </p>
+            <div style={{ display: "flex", gap: "0.45rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
+              <SnapshotPill label="Density" value={denseMode ? "Compact" : "Comfortable"} />
+              <SnapshotPill label="Focus" value={focusMode ? "On" : "Off"} />
+            </div>
+          </div>
           {filteredConversations.map((conversation) => (
             <ConversationListItem
               key={conversation.id}
@@ -103,17 +130,7 @@ export function Sidebar() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
           <div className="glow-divider" />
-          <div>
-            <div className="badge" style={{ marginBottom: "0.35rem" }}>
-              <span role="img" aria-label="sparkle">
-                ✨
-              </span>
-              Workspaces
-            </div>
-            <div className="text-muted" style={{ fontSize: "0.8rem" }}>
-              Switch between personal, research, and client workspaces. Multi-account support ships next.
-            </div>
-          </div>
+          <FocusModeCard active={focusMode} onToggle={() => setFocusMode(!focusMode)} />
         </div>
       </div>
     </aside>
@@ -244,6 +261,47 @@ function ConversationListItem({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function SnapshotPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="badge"
+      style={{
+        background: "rgba(255,255,255,0.06)",
+        fontSize: "0.72rem",
+        padding: "0.25rem 0.55rem",
+        textTransform: "uppercase",
+      }}
+    >
+      <span className="text-muted">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function FocusModeCard({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  return (
+    <div className="fade-card" style={{ padding: "1.2rem", borderRadius: "var(--radius-lg)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 600 }}>Focus mode</p>
+          <p className="text-muted" style={{ margin: "0.4rem 0 0", fontSize: "0.8rem" }}>
+            {active
+              ? "Ambient chrome hidden. Transcript density elevated."
+              : "Streamlined layout available for deep work."}
+          </p>
+        </div>
+        <button
+          className={clsx("glass-button", active && "shadow-soft")}
+          onClick={onToggle}
+          style={{ padding: "0.45rem 0.9rem", fontSize: "0.85rem" }}
+        >
+          {active ? "Disable" : "Enable"}
+        </button>
+      </div>
     </div>
   );
 }
