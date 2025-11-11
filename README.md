@@ -1,6 +1,6 @@
 # GPT Frontend Workspace
 
-This repository now includes a modern ChatGPT-style front-end prototype built with Next.js under `frontend/`. The workspace recreates the 2025 ChatGPT UI patterns including sidebar navigation, conversation list, chat transcript with streaming states, tool invocation cards, and a responsive composer.
+This repository now includes a modern ChatGPT-style front-end prototype built with Next.js under `frontend/` alongside an Express-based API in `backend/`. The workspace recreates the 2025 ChatGPT UI patterns including sidebar navigation, conversation list, chat transcript with streaming states, tool invocation cards, and a responsive composer while the API exposes conversation, message, and streaming endpoints.
 
 ## Getting Started
 
@@ -9,14 +9,14 @@ This repository now includes a modern ChatGPT-style front-end prototype built wi
 - Node.js 18+
 - npm 9+ (or pnpm/yarn with equivalent commands)
 
-### Installation
+### Installation (Frontend)
 
 ```bash
 cd frontend
 npm install
 ```
 
-### Development Server
+### Development Server (Frontend)
 
 ```bash
 npm run dev
@@ -24,14 +24,14 @@ npm run dev
 
 Open http://localhost:3000 to view the workspace. The layout supports conversation switching, simulated streaming responses, prompt suggestions, and theme toggling.
 
-### Production Build
+### Production Build (Frontend)
 
 ```bash
 npm run build
 npm start
 ```
 
-### Linting
+### Linting (Frontend)
 
 ```bash
 npm run lint
@@ -52,6 +52,46 @@ npx playwright test --update-snapshots
 ```
 
 > **Note:** Initial snapshot files are lightweight placeholders. Replace them with real captures once the app is running locally to validate visual fidelity.
+
+## Backend API
+
+The `backend/` directory contains a typed Express server that seeds the same conversation data used by the front-end mock state. It exposes REST + SSE endpoints for listing conversations, appending messages, and simulating assistant streaming.
+
+### Installation (Backend)
+
+```bash
+cd backend
+npm install
+```
+
+### Development Server (Backend)
+
+```bash
+npm run dev
+```
+
+The API defaults to `http://localhost:4000` and provides:
+
+- `GET /api/health` – uptime check.
+- `GET /api/conversations` – conversation summaries.
+- `POST /api/conversations` – create a new conversation.
+- `GET /api/conversations/:id` – fetch full conversation details.
+- `POST /api/conversations/:id/messages` – append a user/assistant/tool message.
+- `GET /api/conversations/:id/stream` – server-sent events stream that simulates an assistant reply.
+
+### Production Build (Backend)
+
+```bash
+npm run build
+npm start
+```
+
+### Quality Gates (Backend)
+
+```bash
+npm run lint
+npm test
+```
 
 ## Project Structure
 
